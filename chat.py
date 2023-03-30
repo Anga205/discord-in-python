@@ -1,33 +1,14 @@
 import tkinter as tk
-import random,time
-
-try:
-    import tkhtmlview as tkh
-except:
-    import sys,subprocess
-    subprocess.check_call([sys.executable, '-m', 'pip', 'install','tkhtmlview'])
+import time,functions,threading,mysql.connector
 
 updateSpeed=500         #in milliseconds
-BG_GRAY = "#36393f"
-BG_COLOR = "#36393f"
-TEXT_COLOR = "#d7d7d7"
 spaces=[" "*x for x in range(100)]
 
-try:
-    open("messages.txt","r")
-except:
-    open("messages.txt","w").write(str({5937293492: [43, 'Hello, World!', 1666617000.272839]}))
+users={}
 
-displayed={5937293492: [43, 'Hello, World!', 1666617000.272839]}
+displayed=[(" "," "," ")]
 
 usedSpaces=1
-
-def uniqueID(list1=list(displayed.keys()),digits=9):
-    a="".join([str(random.randint(0,9))for x in range(digits)])
-    if a not in list1:
-        return a
-    else:
-        return NewID(list1, digits)
 
 def renderMessage(a):
     a=a.replace(":smile:","☺")
@@ -35,113 +16,132 @@ def renderMessage(a):
     a=a.replace("%date%",str(time.ctime(time.time())))
     return a
 
-
-window=tk.Tk()
-window.title("ChatRoom")
-window.geometry("710x710")
-window.iconbitmap("discord.ico")
-window.columnconfigure(0,weight=1)
-window.rowconfigure(1,weight=1)
-window.config(bg=BG_GRAY)
-
-
-UNameLabel=tk.Label(window, text="Enter your Username:",bg='#36393f', fg= "#ffffff", font='System 20')
-UNameLabel.grid(row=0, column=0, sticky=(tk.N,tk.W))
-
-
-UName = tk.Entry(window, bg="#36393f", fg=TEXT_COLOR, font="System 20")
-UName.grid(row=0, column=1, sticky=(tk.W))
-UName.columnconfigure(0,weight=1)   
-
-
-frame=tk.Frame(window, width=window.winfo_width(), bg="#36393f")
-frame.grid(row=1, column=0, columnspan=3,sticky=(tk.W,tk.E,tk.S))
-
-
-def DisplayMessage(ID, user, message, time):
+def DisplayMessage(user, message, Time):
     global displayed,usedSpaces
     #print(message)
 
-    displayed[ID]=[user,renderMessage(message),time]
-    exec(str("global message"+list(displayed.keys())[-1]))
+    displayed.append((user,renderMessage(message),Time))
 
-    if(displayed[list(displayed.keys())[-1]][0]==displayed[list(displayed.keys())[-2]][0]):
+    if(displayed[-1][0]==displayed[-2][0]):
 
-        exec(str("message"+list(displayed.keys())[-1]+" = tk.Label(frame, text=displayed[list(displayed.keys())[-1]][1],bg='#36393f', fg=TEXT_COLOR, wraplength=window.winfo_width(), justify='left', font='Calibri 14')"))
-        exec(str("message"+list(displayed.keys())[-1]+".grid(row=usedSpaces+1, column=0, columnspan=3, sticky=(tk.N,tk.W))"))
-        exec(str("message"+list(displayed.keys())[-1]+".columnconfigure(0,weight=1)"))
-        exec(str("message"+list(displayed.keys())[-1]+".rowconfigure(1,weight=1)"))
+        message = tk.Label(frame_widgets, text=renderMessage(message),bg='#36393f', fg="#d1ddde", wraplength=window.winfo_width(), justify='left', font='Calibri 14')
+        message.grid(row=usedSpaces+1, column=0, columnspan=3, sticky=(tk.N,tk.W))
+        message.columnconfigure(0,weight=1)
+        message.rowconfigure(1,weight=1)
         usedSpaces+=1
 
     else:
 
-        exec(str("Name"+list(displayed.keys())[-1]+" = tk.Label(frame, text=displayed[list(displayed.keys())[-1]][0],bg='#36393f', fg='#ffffff', font='Calibri 16')"))
-        exec(str("Name"+list(displayed.keys())[-1]+".grid(row=usedSpaces+1, column=0, columnspan=1, sticky=(tk.S,tk.W))"))
-        exec(str("Name"+list(displayed.keys())[-1]+".columnconfigure(0,weight=1)"))
-        exec(str("Name"+list(displayed.keys())[-1]+".rowconfigure(1,weight=1)"))
+        Name = tk.Label(frame_widgets, text=user,bg='#36393f', fg='#ffffff', font='Calibri 16 bold')
+        Name.grid(row=usedSpaces+1, column=0, columnspan=1, sticky=(tk.S,tk.W))
+        Name.columnconfigure(0,weight=1)
+        Name.rowconfigure(1,weight=1)
         usedSpaces+=1
 
-        exec(str("time"+list(displayed.keys())[-1]+" = tk.Label(frame, text=displayed[list(displayed.keys())[-1]][2],bg='#36393f', fg=TEXT_COLOR, font='Calibri 10')"))
-        exec(str("time"+list(displayed.keys())[-1]+".grid(row=usedSpaces, column=1, columnspan=2, sticky=(tk.E))"))
-        exec(str("time"+list(displayed.keys())[-1]+".columnconfigure(0,weight=1)"))
-        exec(str("time"+list(displayed.keys())[-1]+".rowconfigure(1,weight=1)"))
+        Time_Widget = tk.Label(frame_widgets, text=str(time.ctime(Time)),bg='#36393f', fg="#a3a6aa", font='Calibri 10')
+        Time_Widget.grid(row=usedSpaces, column=1, columnspan=3, sticky=(tk.E))
+        Time_Widget.columnconfigure(0,weight=1)
+        Time_Widget.rowconfigure(1,weight=1)
 
-        exec(str("message"+list(displayed.keys())[-1]+" = tk.Label(frame, text=displayed[list(displayed.keys())[-1]][1], wraplength=window.winfo_width(),justify='left',bg='#36393f', fg=TEXT_COLOR, font='Calibri 14')"))
-        exec(str("message"+list(displayed.keys())[-1]+".grid(row=usedSpaces+1, column=0, columnspan=3, sticky=(tk.N,tk.W))"))
-        exec(str("message"+list(displayed.keys())[-1]+".columnconfigure(0,weight=1)"))
-        exec(str("message"+list(displayed.keys())[-1]+".rowconfigure(1,weight=1)"))
+        message = tk.Label(frame_widgets, text=renderMessage(message), wraplength=window.winfo_width(),justify='left',bg='#36393f', fg="#d1ddde", font='Calibri 14')
+        message.grid(row=usedSpaces+1, column=0, columnspan=3, sticky=(tk.N,tk.W))
+        message.columnconfigure(0,weight=1)
+        message.rowconfigure(1,weight=1)
         usedSpaces+=1
-
+    frame_widgets.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
 
 def NewlyAdded():
-    global displayed
-    new=eval(open("messages.txt","r").read())
-    for i in displayed:
-        del new[i]
-    return new        
+    global LastChecked, room
+    con=mysql.connector.connect(host="152.67.5.116", user="chat", password="sql123", database="rooms")
+    cur=con.cursor()
+    command="select * from "+room+" where time>="+str(LastChecked)
+    LastChecked=time.time()
+    cur.execute(command)
+    output=[]
+    for x in cur:
+        output.append(x)
+    con.close()
+    return output
 
-def sendMessage(a=""):
-    global spaces
+def sendMessage(token):
+    global spaces, room, textbox
+    con=mysql.connector.connect(host="152.67.5.116", user="chat", password="sql123", database="rooms")
+    cur=con.cursor()
     if textbox.get() in spaces:
         pass
     else:
-        temp=eval(open("messages.txt","r").read())
-        ID=uniqueID(list(displayed.keys()))
-        if UName.get()=="":
-            temp[ID]=["Anonymous User",textbox.get(),time.ctime(time.time())]
-        else:
-            temp[ID]=[UName.get(),textbox.get(),time.ctime(time.time())]
-        open("messages.txt","w").write(str(temp))
+        command="insert into "+room+" values ('"+token+"','"+str('"'.join(str(textbox.get()).split("'")))+"',"+str(time.time())+");"
+        cur.execute(command)
+        con.commit()
+        con.close()
         textbox.delete(0, tk.END)
 
 def update():
-    global updateSpeed, textbox, empty, displayed
-    a=NewlyAdded()
-    if a=={}:
+    try:
+        global updateSpeed, empty
+        def newMsgs():
+            a=NewlyAdded()
+            if a==[]:
+                pass
+            else:
+                for i in a:
+                    users[i[0]]=functions.getName(i[0])
+                    DisplayMessage(users[i[0]],i[1],i[2])
+        canvas.config(width=window.winfo_width()-vsb.winfo_width() ,height=window.winfo_height()-100)
+        threading.Thread(target=newMsgs).start()
+        window.after(updateSpeed,update)
+    except:
         pass
+    
+def buildWindow(ConnectTo, token):
+
+    global textbox,empty,window,LastChecked,room,spaces,frame_widgets,canvas,vsb,frame_canvas
+    LastChecked=0.0
+
+    if ConnectTo in spaces:
+        room="global"
     else:
-        for i in a:
-            DisplayMessage(i,a[i][0],a[i][1],a[i][2])
-    empty.set("".join([" " for x in range(int(window.winfo_width()/4.01))]))    
-    window.after(updateSpeed,update)
+        room=ConnectTo
 
-window.bind('<Return>',sendMessage)
+    window=tk.Tk()
+    window.title("ChatRoom")
+    window.geometry("710x600")
+    window.iconbitmap("assets/icon.ico")
+    window.columnconfigure(0,weight=1)
+    window.rowconfigure(1,weight=1)
+    window.config(bg="#36393f")
+
+    UNameLabel=tk.Label(window, text="Room ID: "+ConnectTo,bg='#36393f', fg= "#ffffff", font='System 20')
+    UNameLabel.grid(row=0, column=0, sticky=(tk.N,tk.W))
+
+    frame_canvas=tk.Frame(window, width=window.winfo_width(), bg="#36393f")
+    frame_canvas.grid(row=1, column=0, columnspan=3,sticky=(tk.W,tk.E,tk.S))
+
+    canvas = tk.Canvas(frame_canvas, bg="#36393f", highlightthickness=0)
+    canvas.grid(row=0, column=0, sticky="news")
+
+    vsb = tk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
+    vsb.grid(row=0, column=1, sticky='ns')
+    canvas.configure(yscrollcommand=vsb.set)
+
+    frame_widgets = tk.Frame(canvas, bg="#36393f", borderwidth=0)
+    canvas.create_window((0, 0), window=frame_widgets, anchor='nw')
 
 
-empty=tk.StringVar()
-empty.set("".join([" " for x in range(int(window.winfo_width()/4.01))]))
 
+    frame_widgets.update_idletasks()
+    canvas.config(scrollregion=canvas.bbox("all"))
 
-message0 = tk.Label(frame, textvariable=empty,bg='#36393f', fg=TEXT_COLOR, justify='right', font='Calibri 14')
-message0.grid(row=1, column=0, columnspan=3, sticky=(tk.N,tk.W))
-message0.columnconfigure(0,weight=1)
-message0.rowconfigure(1,weight=1)
+    send = tk.Button(window, text="Send", font="Sans 12 bold", bg="#5865f2",fg="WHITE",command=lambda e: sendMessage(token))
+    send.grid(row=2, column=2, sticky=(tk.E))
+    window.bind('<Return>',lambda e:sendMessage(token)) 
+    
+    textbox = tk.Entry(window, bg="#40444b", fg="#d7d7d7", font="Calibri 17")
+    textbox.grid(row=2, column=0, columnspan=2, sticky=(tk.E,tk.W))
+    textbox.columnconfigure(0,weight=1)
+    window.protocol("WM_DELETE_WINDOW", lambda: window.destroy())
+    update()
 
+    window.mainloop()
 
-send = tk.Button(window, text="Send", font="Calibri 12 bold", bg="WHITE",command=sendMessage).grid(row=2, column=2, sticky=(tk.E))
-textbox = tk.Entry(window, bg="#36393f", fg=TEXT_COLOR, font="Calibri 17")
-textbox.grid(row=2, column=0, columnspan=2, sticky=(tk.E,tk.W))
-textbox.columnconfigure(0,weight=1)
-
-update()
-window.mainloop()
